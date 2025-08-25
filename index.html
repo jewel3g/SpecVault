@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Standards Library – PDF Viewing Enabled</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{
+      --bg:#0f172a;         /* slate-950 */
+      --panel:#111827;      /* gray-900 */
+      --muted:#1f2937;      /* gray-800 */
+      --text:#e5e7eb;       /* gray-200 */
+      --sub:#9ca3af;        /* gray-400 */
+      --brand:#38bdf8;      /* sky-400 */
+      --ok:#22c55e;         /* green-500 */
+      --warn:#f59e0b;       /* amber-500 */
+      --bad:#ef4444;        /* red-500 */
+      --chip:#0b1222;
+      --radius:16px;
+      --shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg, var(--bg), #0b1222 40%);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    a{color:inherit}
+    .container{max-width:1200px;margin:auto;padding:20px}
+    header.app{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid #1f2937;background:rgba(17,24,39,.7);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
+    .logo .mark{width:28px;height:28px;border-radius:8px;background:radial-gradient(120% 120% at 10% 10%, var(--brand), #2dd4bf 40%, transparent 41%),linear-gradient(135deg,#1f2937, #0b1222);box-shadow:inset 0 0 0 1px #1f2937}
+    .spacer{flex:1}
+    .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;background:var(--brand);color:#04121a;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:.2s transform ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.ghost{background:#0b1222;color:var(--text);border:1px solid #263244;box-shadow:none}
+    .layout{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:18px}
+    @media (max-width: 920px){.layout{grid-template-columns:1fr}}
+    aside.filters{background:linear-gradient(180deg,#0b1222,var(--panel));border:1px solid #1f2937;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    aside h3{margin:0 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--sub)}
+    .field{display:grid;gap:6px;margin:10px 0}
+    .field label{font-size:12px;color:var(--sub)}
+    .input, select, textarea{background:#0a1222;border:1px solid #253045;border-radius:10px;padding:10px 12px;color:var(--text);outline:none}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:var(--chip);border:1px solid #1f2a3f;border-radius:999px;padding:6px 10px;color:var(--sub);font-size:12px}
+    main.panel{background:linear-gradient(180deg,#0b1222,var(--panel));border:1px solid #1f2937;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1f2937}
+    .search{flex:1;display:flex;gap:8px}
+    .search input{flex:1}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    thead th{position:sticky;top:0;background:#0b1222;padding:12px;text-align:left;font-size:12px;color:var(--sub);border-bottom:1px solid #1f2937}
+    tbody td{padding:12px;border-bottom:1px solid #1f2937;vertical-align:top}
+    tbody tr:hover{background:rgba(56,189,248,.06)}
+    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid #243244}
+    .pill.active{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#86efac}
+    .pill.draft{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fbbf24}
+    .pill.withdrawn{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5}
+    .muted{color:var(--sub)}
+    .nowrap{white-space:nowrap}
+    footer.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:12px 16px}
+    .ghost.small{padding:8px 10px;border-radius:8px;font-weight:600}
+    dialog.modal{border:1px solid #1f2937;border-radius:16px;padding:0;background:linear-gradient(180deg,#0b1222,var(--panel));color:var(--text);max-width:800px;width:min(92vw,800px)}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #1f2937}
+    .modal .body{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modal .footer{display:flex;gap:10px;justify-content:flex-end;padding:14px 16px;border-top:1px solid #1f2937}
+    @media (max-width:720px){.modal .body{grid-template-columns:1fr}}
+    .sr-only{position:absolute;width:1px;height:1px;margin:-1px;border:0;padding:0;white-space:nowrap;clip-path:inset(50%);clip:rect(0 0 0 0);overflow:hidden}
+    
+    /* PDF Viewer Styles */
+    .pdf-viewer{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;flex-direction:column}
+    .pdf-viewer.active{display:flex}
+    .pdf-toolbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:var(--panel);border-bottom:1px solid #1f2937}
+    .pdf-title{font-weight:600;color:var(--text)}
+    .pdf-controls{display:flex;gap:8px}
+    .pdf-close{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer}
+    .pdf-container{flex:1;display:flex;justify-content:center;align-items:center;padding:20px}
+    .pdf-frame{width:100%;height:100%;max-width:900px;border:none;border-radius:8px;box-shadow:var(--shadow)}
+    .pdf-placeholder{background:var(--muted);border-radius:8px;padding:40px;text-align:center;max-width:500px}
+    .pdf-placeholder h3{color:var(--text);margin-bottom:12px}
+    .pdf-placeholder p{color:var(--sub);margin-bottom:20px}
+    
+    /* Action buttons */
+    .btn-pdf{background:var(--bad);color:white}
+    
+    /* Notification */
+    .notification{position:fixed;bottom:20px;right:20px;background:var(--ok);color:white;padding:12px 16px;border-radius:8px;box-shadow:var(--shadow);z-index:100;transform:translateY(100px);opacity:0;transition:all 0.3s ease}
+    .notification.show{transform:translateY(0);opacity:1}
+    .notification.error{background:var(--bad)}
+  </style>
+</head>
+<body>
+  <header class="app">
+    <div class="logo" aria-label="Standards Library">
+      <span class="mark" aria-hidden="true"></span>
+      <span>Standards Library</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="btnAdd">+ Add Standard</button>
+    <button class="btn ghost" id="btnExport">Export JSON</button>
+  </header>
+
+  <div class="layout container">
+    <aside class="filters" aria-label="Filters">
+      <h3>Filters</h3>
+      <div class="field">
+        <label for="fSearch">Search</label>
+        <input id="fSearch" class="input" type="search" placeholder="Search all fields…" />
+      </div>
+      <div class="field">
+        <label for="fRegion">Region</label>
+        <select id="fRegion">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fBody">Issuing Body</label>
+        <select id="fBody">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fSector">Sector</label>
+        <select id="fSector">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fStatus">Status</label>
+        <select id="fStatus">
+          <option value="">All</option>
+          <option>Active</option>
+          <option>Draft</option>
+          <option>Withdrawn</option>
+        </select>
+      </div>
+      <div class="chips" id="activeChips" aria-live="polite"></div>
+    </aside>
+
+    <main class="panel" aria-label="Results">
+      <div class="toolbar">
+        <div class="search">
+          <input id="q" class="input" type="search" placeholder="Quick search…" />
+          <button class="btn ghost" id="btnClear">Clear</button>
+        </div>
+        <div class="muted nowrap" id="count"></div>
+      </div>
+      
+      <div class="table-wrap" id="tableView">
+        <table aria-describedby="count">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Issuing Body</th>
+              <th>Standard Section</th>
+              <th>Subsection</th>
+              <th>Overview</th>
+              <th>Applications</th>
+              <th>Sector</th>
+              <th>Status</th>
+              <th>Function</th>
+              <th class="nowrap">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      
+      <footer class="pager">
+        <button class="btn ghost small" id="prev">Prev</button>
+        <span class="muted" id="pageInfo">Page 1</span>
+        <button class="btn ghost small" id="next">Next</button>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <dialog class="modal" id="editModal" aria-labelledby="mdlTitle">
+    <form method="dialog">
+      <header><h3 id="mdlTitle">Add / Edit Standard</h3>
+        <button class="btn ghost small" value="cancel" aria-label="Close">Close</button>
+      </header>
+      <div class="body">
+        <div class="field"><label>Region<input name="Region" class="input" required></label></div>
+        <div class="field"><label>Issuing Body<input name="IssuingBody" class="input" required></label></div>
+        <div class="field"><label>Standard Section<input name="StandardSection" class="input" required></label></div>
+        <div class="field"><label>Subsection<input name="Subsection" class="input"></label></div>
+        <div class="field" style="grid-column:1/-1"><label>Overview<textarea name="Overview" rows="3" class="input"></textarea></label></div>
+        <div class="field" style="grid-column:1/-1"><label>Applications<textarea name="Applications" rows="2" class="input"></textarea></label></div>
+        <div class="field"><label>Sector<input name="Sector" class="input"></label></div>
+        <div class="field"><label>Status<select name="Status"><option>Active</option><option>Draft</option><option>Withdrawn</option></select></label></div>
+        <div class="field"><label>Function<input name="Function" class="input"></label></div>
+        <div class="field" style="grid-column:1/-1"><label>Keyword<input name="Keyword" class="input"></label></div>
+        <div class="field" style="grid-column:1/-1">
+          <label>PDF URL<input name="PdfUrl" class="input" placeholder="https://example.com/document.pdf"></label>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn ghost" value="cancel">Cancel</button>
+        <button class="btn" id="saveStd" value="default">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- PDF Viewer -->
+  <div class="pdf-viewer" id="pdfViewer">
+    <div class="pdf-toolbar">
+      <div class="pdf-title" id="pdfTitle">PDF Document</div>
+      <div class="pdf-controls">
+        <button class="btn ghost small" id="pdfDownload">Download</button>
+        <button class="pdf-close" id="pdfClose">✕</button>
+      </div>
+    </div>
+    <div class="pdf-container">
+      <iframe class="pdf-frame" id="pdfFrame"></iframe>
+      <div class="pdf-placeholder" id="pdfPlaceholder">
+        <h3>No PDF Available</h3>
+        <p>This standard doesn't have an associated PDF document.</p>
+        <button class="btn ghost" id="pdfPlaceholderClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <template id="rowTemplate">
+    <tr>
+      <td data-k="Region"></td>
+      <td data-k="IssuingBody"></td>
+      <td data-k="StandardSection" class="nowrap"></td>
+      <td data-k="Subsection" class="nowrap"></td>
+      <td data-k="Overview"></td>
+      <td data-k="Applications"></td>
+      <td data-k="Sector"></td>
+      <td data-k="Status"></td>
+      <td data-k="Function"></td>
+      <td class="nowrap">
+        <button class="btn ghost small" data-js="edit">Edit</button>
+        <button class="btn ghost small" data-js="viewPdf">View PDF</button>
+        <button class="btn ghost small" data-js="delete">Delete</button>
+      </td>
+    </tr>
+  </template>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // --- Mock seed data (replace with import or API) ---
+    const seed = [
+      {
+        id: crypto.randomUUID(),
+        Region: "International",
+        IssuingBody: "ISO",
+        StandardSection: "IEC 60027",
+        Subsection: "IEC 60754-1",
+        Overview: "Halogen Acid Gas Content",
+        Applications: "Electrical Cables, Building Safety, Public Transport, Industrial Applications",
+        Sector: "Environmental",
+        Status: "Active",
+        Function: "Electronics",
+        Keyword: "",
+        PdfUrl: "https://www.iso.org/files/live/sites/isoorg/files/developing_standards/docs/en/how_to_write_standards.pdf"
+      },
+      { 
+        id: crypto.randomUUID(), 
+        Region: "North America", 
+        IssuingBody: "IEEE", 
+        StandardSection: "IEEE 802.3", 
+        Subsection: "Ethernet", 
+        Overview: "Standard for Ethernet networking", 
+        Applications: "Networking equipment, IT infrastructure", 
+        Sector: "IT", 
+        Status: "Active", 
+        Function: "Networking", 
+        Keyword: "ethernet, networking",
+        PdfUrl: "https://standards.ieee.org/content/dam/ieee-standards/standards/web/documents/tutorials/sbz.pdf"
+      },
+      { 
+        id: crypto.randomUUID(), 
+        Region: "Europe", 
+        IssuingBody: "CENELEC", 
+        StandardSection: "EN 50126", 
+        Subsection: "RAMS", 
+        Overview: "Railway Applications - Reliability, Availability, Maintainability, Safety", 
+        Applications: "Railway systems, signaling, rolling stock", 
+        Sector: "Railway", 
+        Status: "Active", 
+        Function: "Safety", 
+        Keyword: "railway, safety, rams",
+        PdfUrl: "" // No PDF for this one
+      },
+      { 
+        id: crypto.randomUUID(), 
+        Region: "International", 
+        IssuingBody: "IEC", 
+        StandardSection: "IEC 60601", 
+        Subsection: "Medical electrical equipment", 
+        Overview: "Safety and essential performance of medical electrical equipment", 
+        Applications: "Medical devices, healthcare facilities", 
+        Sector: "Medical", 
+        Status: "Active", 
+        Function: "Safety", 
+        Keyword: "medical, safety",
+        PdfUrl: "https://www.iec.ch/basecamp/medical/Medical-electrical-equipment-IEC-60601-1-third-edition.pdf"
+      },
+      { 
+        id: crypto.randomUUID(), 
+        Region: "China", 
+        IssuingBody: "GB", 
+        StandardSection: "GB 4943.1", 
+        Subsection: "Safety requirements", 
+        Overview: "Safety requirements for information technology equipment", 
+        Applications: "IT equipment, consumer electronics", 
+        Sector: "IT", 
+        Status: "Active", 
+        Function: "Safety", 
+        Keyword: "safety, it equipment",
+        PdfUrl: "" // No PDF for this one
+      }
+    ];
+
+    // --- Simple store with LocalStorage persistence ---
+    const store = {
+      key: "standards-lib:v1",
+      list(){
+        const raw = localStorage.getItem(this.key);
+        return raw ? JSON.parse(raw) : seed;
+      },
+      save(items){ localStorage.setItem(this.key, JSON.stringify(items)); },
+      upsert(item){ const items=this.list(); const i=items.findIndex(r=>r.id===item.id); if(i>-1) items[i]=item; else items.push(item); this.save(items); },
+      remove(id){ const items=this.list().filter(r=>r.id!==id); this.save(items); },
+      clear(){ localStorage.removeItem(this.key); }
+    };
+
+    // --- State ---
+    const state = { page: 1, size: 10, q: "", f: { Region:"", IssuingBody:"", Sector:"", Status:"" }};
+
+    // --- Elements ---
+    const $rows = document.getElementById('rows');
+    const $tpl = document.getElementById('rowTemplate');
+    const $count = document.getElementById('count');
+    const $pageInfo = document.getElementById('pageInfo');
+    const $notification = document.getElementById('notification');
+    const $pdfViewer = document.getElementById('pdfViewer');
+    const $pdfFrame = document.getElementById('pdfFrame');
+    const $pdfTitle = document.getElementById('pdfTitle');
+    const $pdfPlaceholder = document.getElementById('pdfPlaceholder');
+
+    // --- Helpers ---
+    const uniq = (arr, k) => [...new Set(arr.map(o=>o[k]).filter(Boolean))].sort();
+    const paginate = (arr, page, size) => arr.slice((page-1)*size, (page)*size);
+    
+    function showNotification(message, isSuccess = true) {
+      $notification.textContent = message;
+      $notification.style.background = isSuccess ? 'var(--ok)' : 'var(--bad)';
+      $notification.classList.add('show');
+      
+      setTimeout(() => {
+        $notification.classList.remove('show');
+      }, 3000);
+    }
+
+    function hydrateFilters(){
+      const items = store.list();
+      fillSelect('fRegion', uniq(items,'Region'));
+      fillSelect('fBody', uniq(items,'IssuingBody'));
+      fillSelect('fSector', uniq(items,'Sector'));
+    }
+    
+    function fillSelect(id, values){
+      const sel = document.getElementById(id);
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">All</option>' + values.map(v=>`<option>${v}</option>`).join('');
+      sel.value = cur; // keep current if present
+    }
+
+    // --- Render ---
+    function render(){
+      const items = store.list();
+      const q = (state.q||"").toLowerCase();
+      const filtered = items.filter(it=>
+        (!state.f.Region || it.Region===state.f.Region) &&
+        (!state.f.IssuingBody || it.IssuingBody===state.f.IssuingBody) &&
+        (!state.f.Sector || it.Sector===state.f.Sector) &&
+        (!state.f.Status || it.Status===state.f.Status) &&
+        (q==="" || Object.values(it).some(v => String(v||"").toLowerCase().includes(q)))
+      );
+
+      const total = filtered.length;
+      const pages = Math.max(1, Math.ceil(total/state.size));
+      state.page = Math.min(state.page, pages);
+
+      $rows.innerHTML = '';
+      for(const item of paginate(filtered, state.page, state.size)){
+        const row = $tpl.content.firstElementChild.cloneNode(true);
+        for(const cell of row.querySelectorAll('[data-k]')){
+          const k = cell.getAttribute('data-k');
+          let val = item[k] || '';
+          if(k==='Status'){
+            const cls = val==="Active"?"active": val==="Draft"?"draft":"withdrawn";
+            val = `<span class="pill ${cls}">${val||'—'}</span>`;
+            cell.innerHTML = val; continue;
+          }
+          cell.textContent = val || '—';
+        }
+        row.dataset.id = item.id;
+        $rows.appendChild(row);
+      }
+      $count.textContent = `${total} item${total!==1?'s':''}`;
+      $pageInfo.textContent = `Page ${state.page} of ${pages}`;
+      updateActiveChips();
+    }
+
+    function updateActiveChips(){
+      const box = document.getElementById('activeChips');
+      const chips = [];
+      for(const [k,v] of Object.entries(state.f)) if(v) chips.push(`${k}: ${v}`);
+      if(state.q) chips.push(`q: ${state.q}`);
+      box.innerHTML = chips.map(c=>`<span class="chip">${c}</span>`).join('');
+    }
+
+    // --- PDF Viewer Functions ---
+    function openPdfViewer(item) {
+      if (item.PdfUrl) {
+        $pdfFrame.src = item.PdfUrl;
+        $pdfTitle.textContent = `${item.StandardSection} - PDF Document`;
+        $pdfFrame.style.display = 'block';
+        $pdfPlaceholder.style.display = 'none';
+      } else {
+        $pdfFrame.style.display = 'none';
+        $pdfPlaceholder.style.display = 'block';
+      }
+      
+      $pdfViewer.classList.add('active');
+    }
+    
+    function closePdfViewer() {
+      $pdfViewer.classList.remove('active');
+      $pdfFrame.src = '';
+    }
+
+    // --- Events ---
+    document.getElementById('q').addEventListener('input', e=>{ state.q = e.target.value; state.page=1; render(); });
+    document.getElementById('fSearch').addEventListener('input', e=>{ state.q = e.target.value; state.page=1; render(); });
+    ['fRegion','fBody','fSector','fStatus'].forEach(id=>{
+      document.getElementById(id).addEventListener('change', e=>{
+        const map = {fRegion:'Region', fBody:'IssuingBody', fSector:'Sector', fStatus:'Status'};
+        state.f[map[id]] = e.target.value; state.page=1; render();
+      });
+    });
+
+    document.getElementById('btnClear').addEventListener('click', ()=>{ 
+      state.q=''; 
+      document.getElementById('q').value=''; 
+      document.getElementById('fSearch').value=''; 
+      state.f={Region:'',IssuingBody:'',Sector:'',Status:''}; 
+      document.querySelectorAll('aside select').forEach(s=>s.value=''); 
+      render(); 
+    });
+
+    document.getElementById('prev').addEventListener('click', ()=>{ state.page=Math.max(1,state.page-1); render();});
+    document.getElementById('next').addEventListener('click', ()=>{ state.page=state.page+1; render();});
+
+    // Row actions via event delegation
+    document.getElementById('rows').addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-js]'); if(!btn) return;
+      const id = e.target.closest('tr').dataset.id;
+      const item = store.list().find(x=>x.id===id);
+      if(btn.dataset.js==='edit') openEditor(item);
+      if(btn.dataset.js==='viewPdf') openPdfViewer(item);
+      if(btn.dataset.js==='delete' && confirm('Delete this standard?')){ 
+        store.remove(id); 
+        hydrateFilters(); 
+        render();
+        showNotification('Standard deleted successfully');
+      }
+    });
+
+    // Modal / Editor
+    const dlg = document.getElementById('editModal');
+    const form = dlg.querySelector('form');
+    let editingId = null;
+
+    function openEditor(item){
+      editingId = item?.id || null;
+      form.reset();
+      if(item){ for(const [k,v] of Object.entries(item)){ const el=form.elements[k]; if(el) el.value = v; } }
+      dlg.showModal();
+    }
+
+    document.getElementById('btnAdd').addEventListener('click', ()=> openEditor());
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      const item = { id: editingId || crypto.randomUUID(), ...data };
+      store.upsert(item); 
+      dlg.close(); 
+      hydrateFilters(); 
+      render();
+      showNotification(`Standard ${editingId ? 'updated' : 'added'} successfully`);
+    });
+
+    document.getElementById('btnExport').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(store.list(), null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {href:url, download:'standards.json'});
+      a.click(); 
+      URL.revokeObjectURL(url);
+      showNotification('Data exported successfully');
+    });
+
+    // PDF Viewer events
+    document.getElementById('pdfClose').addEventListener('click', closePdfViewer);
+    document.getElementById('pdfPlaceholderClose').addEventListener('click', closePdfViewer);
+    document.getElementById('pdfDownload').addEventListener('click', () => {
+      const pdfUrl = $pdfFrame.src;
+      if (pdfUrl) {
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = 'standard.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    });
+
+    // Close PDF viewer when clicking outside
+    $pdfViewer.addEventListener('click', (e) => {
+      if (e.target === $pdfViewer) {
+        closePdfViewer();
+      }
+    });
+
+    // --- Public API (future upgrade hook) ---
+    // You can replace these with real services and keep the UI intact.
+    window.StandardsApp = {
+      import(jsonArray){ 
+        if(Array.isArray(jsonArray)){ 
+          store.save(jsonArray.map(x=>({id:crypto.randomUUID(),...x}))); 
+          hydrateFilters(); 
+          render(); 
+        }
+      },
+      export(){ return store.list(); }
+    };
+
+    // init
+    hydrateFilters();
+    render();
+  </script>
+</body>
+</html>
